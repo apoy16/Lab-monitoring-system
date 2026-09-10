@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LabMonitor Pro — Sistem Manajemen Laboratorium Komputer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- SPLASH / LOGIN OVERLAY                                        -->
+<!-- ============================================================ -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-backdrop"></div>
+  <div class="login-card" id="loginCard" data-role="admin">
+    <div class="login-brand">
+      <div class="login-brand-mark">LM</div>
+      <div>
+        <h1>LabMonitor Pro</h1>
+        <p>Sistem Manajemen &amp; Monitoring Laboratorium Komputer</p>
+      </div>
+    </div>
+
+    <div class="login-role-switch" id="loginRoleSwitch">
+      <button type="button" class="role-btn is-active" data-role="admin">
+        <span class="role-btn-icon">◆</span>
+        <span>Super Admin</span>
+      </button>
+      <button type="button" class="role-btn" data-role="operator">
+        <span class="role-btn-icon">●</span>
+        <span>Operator Lab</span>
+      </button>
+    </div>
+    <p class="login-role-hint" id="loginRoleHint"></p>
+
+    <form id="loginForm" class="login-form" autocomplete="off">
+      <label class="field">
+        <span class="field-label">Username</span>
+        <input type="text" id="loginUsername" class="field-input" placeholder="Masukkan username" autocomplete="username" spellcheck="false">
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input type="password" id="loginPassword" class="field-input" placeholder="Masukkan password" autocomplete="current-password">
+      </label>
+      <p class="login-error" id="loginError"></p>
+      <button type="submit" class="btn btn-primary btn-block">Masuk ke Sistem</button>
+      <button type="button" class="btn btn-ghost btn-block" id="btnGuestMode">Lanjutkan sebagai Guest (Lihat Saja)</button>
+    </form>
+
+    <div class="login-demo-note">
+      Demo — Admin: <code>admin / admin123</code> &nbsp;•&nbsp; Operator: <code>operator / operator123</code>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APP SHELL                                                     -->
+<!-- ============================================================ -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-mark">LM</div>
+      <div class="sidebar-brand-text">
+        <strong>LabMonitor</strong>
+        <span>Pro Console</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="sidebar-section-label">Overview</span>
+      <button class="nav-item is-active" data-pane="dashboard">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11.5" y="2.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2.5" y="11.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11.5" y="11.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Dashboard</span>
+      </button>
+
+      <span class="sidebar-section-label">Monitoring</span>
+      <button class="nav-item" data-pane="floorplan">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 8H17.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 8V16.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Denah Lab</span>
+      </button>
+      <button class="nav-item" data-pane="attendance">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M4 3.5H16V17L10 14L4 17V3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <span>Presensi Mahasiswa</span>
+      </button>
+      <button class="nav-item" data-pane="inventory">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2.5 6.5L10 2.5L17.5 6.5V13.5L10 17.5L2.5 13.5V6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.5 6.5L10 10.5L17.5 6.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 10.5V17.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Inventaris Non-PC</span>
+      </button>
+
+      <span class="sidebar-section-label admin-only">Administrasi</span>
+      <button class="nav-item admin-only" id="btnOpenExport">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2.5V12.5M10 12.5L6.5 9M10 12.5L13.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 14V16C3.5 16.8284 4.17157 17.5 5 17.5H15C15.8284 17.5 16.5 16.8284 16.5 16V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Export Laporan</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sys-pulse">
+        <span class="sys-pulse-dot"></span>
+        <span>Live Sync Aktif</span>
+      </div>
+      <span class="sidebar-version">v2.4.0</span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-col">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2 id="paneTitle">Dashboard</h2>
+        <p id="paneSubtitle">Ringkasan kondisi laboratorium secara real-time</p>
+      </div>
+      <div class="topbar-right">
+        <div class="session-badge" id="sessionBadge">
+          <span class="session-badge-dot"></span>
+          <span id="sessionBadgeText">Guest Mode</span>
+        </div>
+        <button class="btn btn-outline" id="btnAuthToggle">Login</button>
+      </div>
+    </header>
+
+    <!-- CONTENT PANES -->
+    <main class="content">
+
+      <!-- ============ DASHBOARD PANE ============ -->
+      <section class="pane is-active" id="pane-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total Unit PC</span>
+            <span class="stat-value" id="statTotalPc">60</span>
+            <span class="stat-foot">Lab 1 &amp; Lab 2</span>
+          </div>
+          <div class="stat-card accent-green">
+            <span class="stat-label">Sesi Aktif</span>
+            <span class="stat-value" id="statActive">—</span>
+            <span class="stat-foot">Sedang digunakan mahasiswa</span>
+          </div>
+          <div class="stat-card accent-amber">
+            <span class="stat-label">Belum Checkout</span>
+            <span class="stat-value" id="statUnclosed">—</span>
+            <span class="stat-foot">Perlu ditindaklanjuti operator</span>
+          </div>
+          <div class="stat-card accent-gray">
+            <span class="stat-label">Offline</span>
+            <span class="stat-value" id="statOffline">—</span>
+            <span class="stat-foot">PC mati / terputus jaringan</span>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Rata-rata Beban CPU</h3>
+                <p>Agregat telemetri live agent — 30 detik terakhir</p>
+              </div>
+            </div>
+            <div class="panel-body chart-wrap">
+              <canvas id="cpuChart" height="220"></canvas>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Distribusi per Lab</h3>
+                <p>Status unit dalam dua ruang</p>
+              </div>
+            </div>
+            <div class="panel-body" id="labSummaryList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Aktivitas Terbaru</h3>
+              <p>Log kejadian sistem &amp; operator</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <ul class="activity-list" id="activityList"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FLOORPLAN PANE ============ -->
+      <section class="pane" id="pane-floorplan">
+        <div class="floorplan-toolbar">
+          <div class="lab-switch" id="labSwitch">
+            <button class="lab-tab is-active" data-lab="lab1">Lab 1 — GS Lantai 2</button>
+            <button class="lab-tab" data-lab="lab2">Lab 2 — GU Lantai 3</button>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><i class="dot dot-active"></i> Aktif</span>
+            <span class="legend-item"><i class="dot dot-unclosed"></i> Belum Checkout</span>
+            <span class="legend-item"><i class="dot dot-standby"></i> Standby</span>
+            <span class="legend-item"><i class="dot dot-offline"></i> Offline</span>
+          </div>
+          <button class="btn btn-danger btn-sm admin-only" id="btnMassShutdown">Shutdown Massal</button>
+        </div>
+
+        <div class="lab-room" id="labRoom">
+          <div class="lab-board">Papan Tulis / Meja Dosen</div>
+          <div class="lab-columns">
+            <div class="lab-col" id="labColLeft"></div>
+            <div class="lab-aisle">Lorong Utama</div>
+            <div class="lab-col" id="labColRight"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ATTENDANCE PANE ============ -->
+      <section class="pane" id="pane-attendance">
+        <div class="panel">
+          <div class="panel-head panel-head-row">
+            <div>
+              <h3>Log Presensi Mahasiswa</h3>
+              <p>Rekaman scan barcode presensi seluruh sesi praktikum</p>
+            </div>
+            <div class="panel-actions">
+              <input type="search" id="attendanceSearch" class="search-input" placeholder="Cari nama, NIM, kelas, atau mata kuliah…">
+              <button class="btn btn-outline btn-sm admin-only" id="btnDownloadAttendance">Download Excel Dosen</button>
+            </div>
+          </div>
+          <div class="panel-body table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>NIM</th><th>Nama</th><th>Kelas</th><th>Mata Kuliah</th><th>Dosen</th><th>PC</th><th>Sesi</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTableBody"></tbody>
+            </table>
+            <p class="table-empty" id="attendanceEmpty" hidden>Tidak ada data yang cocok dengan pencarian.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ INVENTORY PANE ============ -->
+      <section class="pane" id="pane-inventory">
+        <div class="panel">
+          <div class="panel-head panel-head-row">
+            <div>
+              <h3>Inventaris Aset Non-PC</h3>
+              <p>Monitor, keyboard, mouse, router, dan dongle Wi-Fi</p>
+            </div>
+            <div class="panel-actions">
+              <input type="search" id="inventorySearch" class="search-input" placeholder="Cari nama aset atau lokasi…">
+            </div>
+          </div>
+          <div class="panel-body table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Kode Aset</th><th>Nama Aset</th><th>Kategori</th><th>Lokasi</th><th>Kondisi</th><th>Update Terakhir</th></tr>
+              </thead>
+              <tbody id="inventoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: PC DETAIL                                              -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalPcDetail">
+  <div class="modal-panel modal-panel-lg">
+    <div class="modal-head">
+      <div class="modal-head-id">
+        <span class="dot" id="pcModalDot"></span>
+        <div>
+          <h3 id="pcModalTitle">PC-001</h3>
+          <p id="pcModalSubtitle">Meja 01 · Lab 1</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="pcModalClose" aria-label="Tutup">✕</button>
+    </div>
+
+    <div class="modal-tabs" id="pcModalTabs">
+      <button class="modal-tab is-active" data-tab="info">Info &amp; Remote</button>
+      <button class="modal-tab" data-tab="history">Riwayat &amp; Telemetri</button>
+      <button class="modal-tab admin-only" data-tab="asset">SN Komponen</button>
+      <button class="modal-tab" data-tab="qr">Label QR</button>
+      <button class="modal-tab admin-only" data-tab="process">Process Inspector</button>
+      <button class="modal-tab" data-tab="maintenance">Log Maintenance</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- TAB 1: Info & Remote -->
+      <div class="modal-tab-panel is-active" data-panel="info">
+        <div class="info-grid" id="infoSpecGrid"></div>
+        <div class="remote-actions">
+          <button class="btn btn-outline btn-sm admin-only" id="btnBroadcast">Broadcast Message</button>
+          <button class="btn btn-outline btn-sm admin-only" id="btnRestart">Restart Remote</button>
+          <button class="btn btn-danger btn-sm admin-only" id="btnShutdownOne">Shutdown Remote</button>
+        </div>
+        <p class="admin-locked-note not-admin-only">Aksi remote hanya tersedia untuk Super Admin.</p>
+      </div>
+
+      <!-- TAB 2: Riwayat & Telemetri -->
+      <div class="modal-tab-panel" data-panel="history">
+        <div class="subsection">
+          <h4>Pemakai Saat Ini / Terakhir</h4>
+          <div class="info-grid" id="userHistoryGrid"></div>
+        </div>
+        <div class="subsection">
+          <h4>Telemetri Live Agent</h4>
+          <div class="telemetry-bars">
+            <div class="telemetry-row">
+              <span>CPU</span>
+              <div class="bar-track"><div class="bar-fill bar-cpu" id="telemetryCpuBar"></div></div>
+              <span id="telemetryCpuVal">—%</span>
+            </div>
+            <div class="telemetry-row">
+              <span>RAM</span>
+              <div class="bar-track"><div class="bar-fill bar-ram" id="telemetryRamBar"></div></div>
+              <span id="telemetryRamVal">—%</span>
+            </div>
+          </div>
+          <h4 class="mt">Aplikasi / Proses Aktif</h4>
+          <ul class="process-list" id="telemetryProcessList"></ul>
+        </div>
+      </div>
+
+      <!-- TAB 3: SN Komponen -->
+      <div class="modal-tab-panel" data-panel="asset">
+        <form class="asset-form" id="assetForm">
+          <label class="field"><span class="field-label">SN Motherboard</span><input class="field-input" name="motherboard" type="text"></label>
+          <label class="field"><span class="field-label">SN RAM</span><input class="field-input" name="ram" type="text"></label>
+          <label class="field"><span class="field-label">SN SSD/HDD</span><input class="field-input" name="storage" type="text"></label>
+          <label class="field"><span class="field-label">SN Dongle Wi-Fi</span><input class="field-input" name="wifi" type="text"></label>
+          <label class="field"><span class="field-label">SN Monitor</span><input class="field-input" name="monitor" type="text"></label>
+          <label class="field"><span class="field-label">Masa Garansi</span><input class="field-input" name="warranty" type="date"></label>
+          <button type="submit" class="btn btn-primary btn-sm">Simpan Data Aset</button>
+          <span class="save-confirm" id="assetSaveConfirm">Tersimpan ✓</span>
+        </form>
+      </div>
+
+      <!-- TAB 4: QR -->
+      <div class="modal-tab-panel" data-panel="qr">
+        <div class="qr-wrap">
+          <div class="qr-box">
+            <img id="qrImage" alt="QR Code Presensi" width="180" height="180">
+          </div>
+          <div class="qr-meta">
+            <p>QR ini digunakan mahasiswa untuk presensi otomatis pada meja <strong id="qrSeatLabel">—</strong>.</p>
+            <button class="btn btn-outline btn-sm" id="btnPrintSingle">Cetak Label Ini</button>
+            <button class="btn btn-primary btn-sm admin-only" id="btnPrintAll">Cetak Massal Lembar A4 (Semua PC)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: Process Inspector -->
+      <div class="modal-tab-panel" data-panel="process">
+        <div class="process-inspector">
+          <label class="field">
+            <span class="field-label">Nama Aplikasi / Proses</span>
+            <input class="field-input" id="killProcessInput" type="text" placeholder="cth: chrome.exe">
+          </label>
+          <button class="btn btn-danger btn-sm" id="btnKillProcess">Kill App Remote</button>
+        </div>
+        <p class="hint-text">Menjalankan proses ini akan mengirim sinyal terminate ke live agent pada unit terkait.</p>
+        <ul class="process-list" id="inspectorProcessList"></ul>
+      </div>
+
+      <!-- TAB 6: Log Maintenance -->
+      <div class="modal-tab-panel" data-panel="maintenance">
+        <form class="maintenance-form" id="maintenanceForm">
+          <label class="field">
+            <span class="field-label">Kendala</span>
+            <input class="field-input" name="issue" type="text" placeholder="cth: Monitor berkedip" required>
+          </label>
+          <label class="field">
+            <span class="field-label">Tindakan Teknisi</span>
+            <input class="field-input" name="action" type="text" placeholder="cth: Ganti kabel VGA" required>
+          </label>
+          <button type="submit" class="btn btn-primary btn-sm">Catat Riwayat</button>
+        </form>
+        <table class="data-table mt">
+          <thead><tr><th>Tanggal</th><th>Kendala</th><th>Tindakan</th><th>Teknisi</th></tr></thead>
+          <tbody id="maintenanceTableBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: EXPORT LAPORAN                                         -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalExport">
+  <div class="modal-panel modal-panel-sm">
+    <div class="modal-head">
+      <div>
+        <h3>Export Laporan</h3>
+        <p>Unduh data dalam format Excel (.xlsx)</p>
+      </div>
+      <button class="icon-btn" id="exportModalClose" aria-label="Tutup">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-option">
+        <div>
+          <strong>Laporan Presensi Dosen</strong>
+          <p>Rekap kehadiran mahasiswa per mata kuliah dan kelas.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" data-export="attendance">Download</button>
+      </div>
+      <div class="export-option">
+        <div>
+          <strong>Laporan Maintenance Teknisi</strong>
+          <p>Riwayat kendala dan tindakan perbaikan seluruh unit.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" data-export="maintenance">Download</button>
+      </div>
+      <div class="export-option">
+        <div>
+          <strong>Master Inventaris Aset</strong>
+          <p>Daftar lengkap aset PC dan non-PC beserta kondisi.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" data-export="inventory">Download</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/floorplan.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
