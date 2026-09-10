@@ -121,16 +121,16 @@ const Auth = (() => {
     hideLoginOverlay();
   }
 
-  function bindAntiPaste(input){
-    ["paste", "drop", "copy", "cut"].forEach((evt) => {
-      input.addEventListener(evt, (e) => {
-        e.preventDefault();
-        const errEl = document.getElementById("loginError");
-        errEl.textContent = "Aksi tempel/seret tidak diizinkan pada kolom ini.";
-        errEl.classList.add("is-visible");
-        setTimeout(() => errEl.classList.remove("is-visible"), 2000);
-      });
-    });
+  const ROLE_HINT = {
+    admin: { text: "Mode aktif: <strong>Super Admin</strong> — akses penuh ke seluruh fitur sistem.", role: "admin" },
+    operator: { text: "Mode aktif: <strong>Operator Lab</strong> — akses terbatas pada lab yang ditugaskan.", role: "operator" }
+  };
+
+  function updateRoleHint(role){
+    const hint = document.getElementById("loginRoleHint");
+    if (!hint) return;
+    hint.innerHTML = ROLE_HINT[role].text;
+    document.getElementById("loginCard").dataset.role = role;
   }
 
   function init(){
@@ -141,11 +141,13 @@ const Auth = (() => {
       document.querySelectorAll(".role-btn").forEach((b) => b.classList.remove("is-active"));
       btn.classList.add("is-active");
       selectedRole = btn.dataset.role;
+      updateRoleHint(selectedRole);
     });
+    updateRoleHint(selectedRole);
 
-    // Anti-paste security on both fields
-    bindAntiPaste(document.getElementById("loginUsername"));
-    bindAntiPaste(document.getElementById("loginPassword"));
+    // Catatan: fitur paste/drop pada kolom kredensial SENGAJA dibiarkan aktif
+    // (tidak diblok) agar kompatibel dengan Password Manager (Bitwarden, 1Password,
+    // bawaan browser), sesuai rekomendasi OWASP Authentication Cheat Sheet.
 
     // Login form submit
     document.getElementById("loginForm").addEventListener("submit", (e) => {
