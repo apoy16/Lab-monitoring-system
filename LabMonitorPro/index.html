@@ -16,7 +16,7 @@
 <!-- ============================================================ -->
 <div id="loginOverlay" class="login-overlay">
   <div class="login-backdrop"></div>
-  <div class="login-card">
+    <div class="login-card" id="loginCard" data-role="admin">
     <div class="login-brand">
       <div class="login-brand-mark">LM</div>
       <div>
@@ -35,17 +35,17 @@
         <span>Operator Lab</span>
       </button>
     </div>
+    <p class="login-role-hint" id="loginRoleHint"></p>
 
     <form id="loginForm" class="login-form" autocomplete="off">
       <label class="field">
         <span class="field-label">Username</span>
-        <input type="text" id="loginUsername" class="field-input" placeholder="Masukkan username" autocomplete="off" spellcheck="false">
+        <input type="text" id="loginUsername" class="field-input" placeholder="Masukkan username" autocomplete="username" spellcheck="false">
       </label>
       <label class="field">
         <span class="field-label">Password</span>
-        <input type="password" id="loginPassword" class="field-input" placeholder="Masukkan password" autocomplete="off">
+        <input type="password" id="loginPassword" class="field-input" placeholder="Masukkan password" autocomplete="current-password">
       </label>
-      <p class="login-hint">Tempel (paste) dinonaktifkan pada kolom kredensial demi keamanan sesi.</p>
       <p class="login-error" id="loginError"></p>
       <button type="submit" class="btn btn-primary btn-block">Masuk ke Sistem</button>
       <button type="button" class="btn btn-ghost btn-block" id="btnGuestMode">Lanjutkan sebagai Guest (Lihat Saja)</button>
