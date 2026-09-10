@@ -145,9 +145,7 @@ const Auth = (() => {
     });
     updateRoleHint(selectedRole);
 
-    // Catatan: fitur paste/drop pada kolom kredensial SENGAJA dibiarkan aktif
-    // (tidak diblok) agar kompatibel dengan Password Manager (Bitwarden, 1Password,
-    // bawaan browser), sesuai rekomendasi OWASP Authentication Cheat Sheet.
+    // Login form submit
 
     // Login form submit
     document.getElementById("loginForm").addEventListener("submit", (e) => {
