@@ -214,45 +214,166 @@ const Dashboard = (() => {
    ============================================================ */
 const AttendancePane = (() => {
   let allRows = [];
+  let filteredRows = [];
+  let currentPage = 1;
+  let pageSize = 10;
 
   function statusPillClass(status){
-    return status === "Aktif" ? "pill-active" : "pill-unclosed";
+    if (status === "Aktif") return "pill-active";
+    if (status === "Checkout Manual") return "pill-manual";
+    return "pill-unclosed";
   }
 
-  function render(rows){
+  function populateFilterOptions(rows){
+    const kelasSelect = document.getElementById("filterKelas");
+    const matkulSelect = document.getElementById("filterMatkul");
+    const uniqueKelas = [...new Set(rows.map(r => r.kelas))].sort();
+    const uniqueMatkul = [...new Set(rows.map(r => r.matkul))].sort();
+
+    kelasSelect.innerHTML = `<option value="">Semua Kelas</option>` +
+      uniqueKelas.map(k => `<option value="${k}">${k}</option>`).join("");
+    matkulSelect.innerHTML = `<option value="">Semua Mata Kuliah</option>` +
+      uniqueMatkul.map(m => `<option value="${m}">${m}</option>`).join("");
+  }
+
+  function currentFilters(){
+    return {
+      q: document.getElementById("attendanceSearch").value.trim().toLowerCase(),
+      kelas: document.getElementById("filterKelas").value,
+      matkul: document.getElementById("filterMatkul").value,
+      status: document.getElementById("filterStatus").value
+    };
+  }
+
+  function applyFilters(){
+    const f = currentFilters();
+    filteredRows = allRows.filter(r => {
+      const matchQ = !f.q || r.nama.toLowerCase().includes(f.q) || r.nim.toLowerCase().includes(f.q) ||
+        r.kelas.toLowerCase().includes(f.q) || r.matkul.toLowerCase().includes(f.q);
+      const matchKelas = !f.kelas || r.kelas === f.kelas;
+      const matchMatkul = !f.matkul || r.matkul === f.matkul;
+      const matchStatus = !f.status || r.status === f.status;
+      return matchQ && matchKelas && matchMatkul && matchStatus;
+    });
+    currentPage = 1;
+    renderPage();
+  }
+
+  function renderPage(){
     const body = document.getElementById("attendanceTableBody");
     const empty = document.getElementById("attendanceEmpty");
-    if (!rows.length){
+    const isGuest = Auth.currentRole() === "guest";
+
+    if (!filteredRows.length){
       body.innerHTML = "";
       empty.hidden = false;
+      renderPagination();
       return;
     }
     empty.hidden = true;
-    body.innerHTML = rows.map(r => `
+
+    const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * pageSize;
+    const pageRows = filteredRows.slice(start, start + pageSize);
+
+    body.innerHTML = pageRows.map(r => `
       <tr>
         <td>${r.nim}</td><td>${r.nama}</td><td>${r.kelas}</td><td>${r.matkul}</td>
         <td>${r.dosen}</td><td>${r.pc}</td><td>${r.sesi}</td>
+        <td>${r.scanIn ? `Scan In: ${r.scanIn}` : `<span class="cell-muted">—</span>`}</td>
         <td><span class="pill ${statusPillClass(r.status)}">${r.status}</span></td>
+        <td class="staff-only">
+          ${r.status === "Belum Checkout"
+            ? `<button class="btn btn-force" data-force-id="${r.id}" ${isGuest ? "disabled" : ""}>Force Checkout</button>`
+            : `<span class="cell-muted">—</span>`}
+        </td>
       </tr>`).join("");
+
+    renderPagination();
+  }
+
+  function renderPagination(){
+    const bar = document.getElementById("attendancePagination");
+    const total = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, total);
+
+    let pageButtons = "";
+    for (let p = 1; p <= totalPages; p++){
+      if (totalPages > 7 && p !== 1 && p !== totalPages && Math.abs(p - currentPage) > 1){
+        if (p === 2 || p === totalPages - 1) pageButtons += `<span class="cell-muted">…</span>`;
+        continue;
+      }
+      pageButtons += `<button class="page-btn ${p === currentPage ? "is-active" : ""}" data-page="${p}">${p}</button>`;
+    }
+
+    bar.innerHTML = `
+      <span class="pagination-info">Menampilkan ${start}–${end} dari ${total} data
+        <select class="page-size-select" id="pageSizeSelect">
+          <option value="10" ${pageSize === 10 ? "selected" : ""}>10 / halaman</option>
+          <option value="20" ${pageSize === 20 ? "selected" : ""}>20 / halaman</option>
+          <option value="50" ${pageSize === 50 ? "selected" : ""}>50 / halaman</option>
+        </select>
+      </span>
+      <span class="pagination-controls">
+        <button class="page-btn" id="pagePrev" ${currentPage === 1 ? "disabled" : ""}>‹</button>
+        ${pageButtons}
+        <button class="page-btn" id="pageNext" ${currentPage === totalPages ? "disabled" : ""}>›</button>
+      </span>`;
+
+    document.getElementById("pagePrev").addEventListener("click", () => { currentPage--; renderPage(); });
+    document.getElementById("pageNext").addEventListener("click", () => { currentPage++; renderPage(); });
+    bar.querySelectorAll("[data-page]").forEach(btn => {
+      btn.addEventListener("click", () => { currentPage = Number(btn.dataset.page); renderPage(); });
+    });
+    document.getElementById("pageSizeSelect").addEventListener("change", (e) => {
+      pageSize = Number(e.target.value);
+      currentPage = 1;
+      renderPage();
+    });
   }
 
   async function load(){
     allRows = await Api.getAttendance();
-    render(allRows);
+    populateFilterOptions(allRows);
+    applyFilters();
   }
 
-  function bindSearch(){
-    document.getElementById("attendanceSearch").addEventListener("input", (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      if (!q){ render(allRows); return; }
-      render(allRows.filter(r =>
-        r.nama.toLowerCase().includes(q) || r.nim.toLowerCase().includes(q) ||
-        r.kelas.toLowerCase().includes(q) || r.matkul.toLowerCase().includes(q)
-      ));
+  async function handleForceCheckout(attendanceId){
+    if (Auth.currentRole() === "guest"){
+      Toast.show("Guest tidak dapat melakukan aksi ini.", "error");
+      return;
+    }
+    if (!confirm("Tandai mahasiswa ini sebagai checkout manual?")) return;
+    await Api.forceCheckout(attendanceId);
+    Toast.show("Checkout manual berhasil dicatat.");
+    await load();
+    if (typeof Floorplan !== "undefined") Floorplan.render(Floorplan.getActiveLab());
+    if (typeof Dashboard !== "undefined") Dashboard.refresh();
+  }
+
+  function bindEvents(){
+    document.getElementById("attendanceSearch").addEventListener("input", applyFilters);
+    document.getElementById("filterKelas").addEventListener("change", applyFilters);
+    document.getElementById("filterMatkul").addEventListener("change", applyFilters);
+    document.getElementById("filterStatus").addEventListener("change", applyFilters);
+    document.getElementById("btnResetFilters").addEventListener("click", () => {
+      document.getElementById("attendanceSearch").value = "";
+      document.getElementById("filterKelas").value = "";
+      document.getElementById("filterMatkul").value = "";
+      document.getElementById("filterStatus").value = "";
+      applyFilters();
+    });
+    document.getElementById("attendanceTableBody").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-force-id]");
+      if (!btn) return;
+      handleForceCheckout(Number(btn.dataset.forceId));
     });
   }
 
-  return { load, init: bindSearch };
+  return { load, init: bindEvents };
 })();
 
 /* ============================================================
