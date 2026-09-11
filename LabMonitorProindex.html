@@ -218,7 +218,7 @@
         </div>
       </section>
 
-      <!-- ============ ATTENDANCE PANE ============ -->
+            <!-- ============ ATTENDANCE PANE ============ -->
       <section class="pane" id="pane-attendance">
         <div class="panel">
           <div class="panel-head panel-head-row">
@@ -227,21 +227,42 @@
               <p>Rekaman scan barcode presensi seluruh sesi praktikum</p>
             </div>
             <div class="panel-actions">
-              <input type="search" id="attendanceSearch" class="search-input" placeholder="Cari nama, NIM, kelas, atau mata kuliah…">
               <button class="btn btn-outline btn-sm admin-only" id="btnDownloadAttendance">Download Excel Dosen</button>
             </div>
           </div>
-          <div class="panel-body table-wrap">
+
+          <div class="panel-body" style="padding-bottom:0;">
+            <div class="attendance-filters">
+              <input type="search" id="attendanceSearch" class="search-input" placeholder="Cari nama, NIM, kelas, atau mata kuliah…">
+              <select id="filterKelas" class="filter-select">
+                <option value="">Semua Kelas</option>
+              </select>
+              <select id="filterMatkul" class="filter-select">
+                <option value="">Semua Mata Kuliah</option>
+              </select>
+              <select id="filterStatus" class="filter-select">
+                <option value="">Semua Status</option>
+                <option value="Aktif">Aktif</option>
+                <option value="Belum Checkout">Belum Checkout</option>
+                <option value="Checkout Manual">Checkout Manual</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" id="btnResetFilters">Reset Filter</button>
+            </div>
+          </div>
+
+          <div class="panel-body table-wrap" style="padding-top:0;">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>NIM</th><th>Nama</th><th>Kelas</th><th>Mata Kuliah</th><th>Dosen</th><th>PC</th><th>Sesi</th><th>Status</th>
+                  <th>NIM</th><th>Nama</th><th>Kelas</th><th>Mata Kuliah</th><th>Dosen</th><th>PC</th><th>Sesi</th><th>Scan In</th><th>Status</th><th class="staff-only">Aksi</th>
                 </tr>
               </thead>
               <tbody id="attendanceTableBody"></tbody>
             </table>
-            <p class="table-empty" id="attendanceEmpty" hidden>Tidak ada data yang cocok dengan pencarian.</p>
+            <p class="table-empty" id="attendanceEmpty" hidden>Tidak ada data yang cocok dengan filter/pencarian.</p>
           </div>
+
+          <div class="pagination-bar" id="attendancePagination"></div>
         </div>
       </section>
 
