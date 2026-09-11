@@ -125,6 +125,16 @@ const Api = (() => {
     return db;
   }
 
+  function addMinutes(hhmm, mins){
+    const [h, m] = hhmm.split(":").map(Number);
+    const total = h * 60 + m + mins;
+    const hh = Math.floor(total / 60) % 24;
+    const mm = total % 60;
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  }
+
+  function randHex(len){
+       
   function randHex(len){
     let s = "";
     const chars = "ABCDEF0123456789";
@@ -220,6 +230,25 @@ const Api = (() => {
       await delay(100);
       if (USE_MOCK) return DB.attendance;
       return fetch(`${BASE_URL}/attendance`).then(r => r.json());
+    },
+
+    /** POST /api/attendance/:id/force-checkout — override manual oleh operator */
+    async forceCheckout(attendanceId){
+      await delay(200);
+      if (USE_MOCK){
+        const record = DB.attendance.find(a => a.id === attendanceId);
+        if (!record) return null;
+        record.status = "Checkout Manual";
+        record.scanOut = new Date().toTimeString().slice(0, 5);
+        const pc = DB.pcs[record.pc];
+        if (pc && pc.status === "unclosed"){
+          pc.status = "standby";
+          pc.currentUser = null;
+        }
+        saveDb(DB);
+        return record;
+      }
+      return fetch(`${BASE_URL}/attendance/${attendanceId}/force-checkout`, { method: "POST" }).then(r => r.json());
     },
 
     /** GET /api/inventory */
