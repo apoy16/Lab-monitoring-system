@@ -92,7 +92,7 @@ const Api = (() => {
           { date: "2026-07-12", issue: "Monitor berkedip saat startup", action: "Ganti kabel VGA", tech: "Teguh S." }
         ] : [];
 
-                if (hasSession){
+        if (hasSession){
           const u = db.pcs[pcId].currentUser;
           const sesiStart = u.sesi.split(" - ")[0];
           db.attendance.push({
@@ -102,6 +102,8 @@ const Api = (() => {
             status: status === "active" ? "Aktif" : "Belum Checkout"
           });
         }
+      }
+    });
 
     db.inventory = [
       { code: "MNT-001", name: "Monitor LG 19\" IPS", category: "Monitor", location: "Lab 1 - GS Lt 2", condition: "Baik", updated: "2026-08-02" },
@@ -133,8 +135,6 @@ const Api = (() => {
     return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
   }
 
-  function randHex(len){
-       
   function randHex(len){
     let s = "";
     const chars = "ABCDEF0123456789";
