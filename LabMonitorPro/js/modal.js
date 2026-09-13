@@ -271,6 +271,12 @@ const PcModal = (() => {
    EXPORT MODAL
    ============================================================ */
 const ExportModal = (() => {
+  const REPORT_TITLES = {
+    attendance: "Laporan Presensi Dosen",
+    maintenance: "Laporan Maintenance Teknisi",
+    inventory: "Master Inventaris Aset"
+  };
+
   function open(){ document.getElementById("modalExport").classList.add("is-open"); }
   function close(){ document.getElementById("modalExport").classList.remove("is-open"); }
 
@@ -286,6 +292,59 @@ const ExportModal = (() => {
     URL.revokeObjectURL(url);
   }
 
+  function printAsPdf(type, headers, dataRows){
+    const win = window.open("", "_blank");
+    const rowsHtml = dataRows.map(r => `<tr>${r.map(v => `<td>${v}</td>`).join("")}</tr>`).join("");
+    const headHtml = headers.map(h => `<th>${h}</th>`).join("");
+    win.document.write(`
+      <html><head><title>${REPORT_TITLES[type] || "Laporan"} — LabMonitor Pro</title>
+      <style>
+        body{ font-family: 'Inter', system-ui, sans-serif; margin:32px; color:#0f172a; }
+        h1{ font-size:18px; margin-bottom:2px; }
+        p{ color:#64748b; font-size:12px; margin-top:0; margin-bottom:20px; }
+        table{ width:100%; border-collapse:collapse; font-size:12px; }
+        th{ text-align:left; background:#f1f5f9; padding:8px 10px; border-bottom:2px solid #cbd5e1; }
+        td{ padding:7px 10px; border-bottom:1px solid #e2e8f0; }
+      </style></head>
+      <body>
+        <h1>${REPORT_TITLES[type] || "Laporan"}</h1>
+        <p>LabMonitor Pro — dicetak ${new Date().toLocaleString("id-ID")}</p>
+        <table><thead><tr>${headHtml}</tr></thead><tbody>${rowsHtml || `<tr><td colspan="${headers.length}">Tidak ada data pada rentang ini.</td></tr>`}</tbody></table>
+        <script>window.onload = () => window.print();</script>
+      </body></html>
+    `);
+    win.document.close();
+  }
+
+  function getControls(type){
+    const range = document.getElementById(`rangeSelect-${type}`).value;
+    const format = document.getElementById(`formatSelect-${type}`).value;
+    const customStart = document.getElementById(`customStart-${type}`).value;
+    const customEnd = document.getElementById(`customEnd-${type}`).value;
+    return { range, format, customStart, customEnd };
+  }
+
+  async function handleDownload(type){
+    const { range, format, customStart, customEnd } = getControls(type);
+    const { filename, content, headers, dataRows } = await Api.exportReport(type, { range, customStart, customEnd });
+
+    if (format === "pdf"){
+      printAsPdf(type, headers, dataRows);
+      Toast.show("Jendela cetak dibuka — pilih \"Save as PDF\" pada dialog print.");
+    } else {
+      downloadCsv(filename, content);
+      Toast.show("Laporan berhasil diunduh.");
+    }
+  }
+
+  function bindRangeToggle(type){
+    const rangeSelect = document.getElementById(`rangeSelect-${type}`);
+    const customBox = document.getElementById(`customDates-${type}`);
+    rangeSelect.addEventListener("change", () => {
+      customBox.hidden = rangeSelect.value !== "custom";
+    });
+  }
+
   function bind(){
     document.getElementById("btnOpenExport").addEventListener("click", () => {
       if (!Auth.isAdmin()){
@@ -298,19 +357,14 @@ const ExportModal = (() => {
     document.getElementById("modalExport").addEventListener("click", (e) => {
       if (e.target.id === "modalExport") close();
     });
+
+    ["attendance", "maintenance", "inventory"].forEach(bindRangeToggle);
+
     document.querySelectorAll("[data-export]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const { filename, content } = await Api.exportReport(btn.dataset.export);
-        downloadCsv(filename, content);
-        Toast.show("Laporan berhasil diunduh.");
-      });
+      btn.addEventListener("click", () => handleDownload(btn.dataset.export));
     });
 
-    document.getElementById("btnDownloadAttendance").addEventListener("click", async () => {
-      const { filename, content } = await Api.exportReport("attendance");
-      downloadCsv(filename, content);
-      Toast.show("Laporan presensi berhasil diunduh.");
-    });
+    document.getElementById("btnDownloadAttendance").addEventListener("click", () => handleDownload("attendance"));
   }
 
   return { init: bind, open, close };
