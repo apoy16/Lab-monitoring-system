@@ -440,40 +440,100 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODAL: EXPORT LAPORAN                                         -->
-<!-- ============================================================ -->
 <div class="modal-overlay" id="modalExport">
   <div class="modal-panel modal-panel-sm">
     <div class="modal-head">
       <div>
         <h3>Export Laporan</h3>
-        <p>Unduh data dalam format Excel (.xlsx)</p>
+        <p>Pilih rentang tanggal dan format sebelum mengunduh</p>
       </div>
       <button class="icon-btn" id="exportModalClose" aria-label="Tutup">✕</button>
     </div>
     <div class="modal-body">
+      <p class="export-note">Mode demo: unduhan disimulasikan langsung di browser Anda. Saat backend Flask aktif, endpoint ini akan menghasilkan file .xlsx (openpyxl) / .pdf (reportlab) asli dari server.</p>
+
       <div class="export-option">
-        <div>
+        <div class="export-option-icon export-icon-excel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M8 9h2"/></svg>
+        </div>
+        <div class="export-option-body">
           <strong>Laporan Presensi Dosen</strong>
           <p>Rekap kehadiran mahasiswa per mata kuliah dan kelas.</p>
+          <div class="export-controls">
+            <select class="filter-select export-range-select" id="rangeSelect-attendance">
+              <option value="all">Semua Data</option>
+              <option value="month">Bulan Ini</option>
+              <option value="semester">Semester Ini</option>
+              <option value="custom">Custom Tanggal</option>
+            </select>
+            <select class="filter-select export-format-select" id="formatSelect-attendance">
+              <option value="xlsx">.xlsx (Excel)</option>
+              <option value="pdf">.pdf (Cetak)</option>
+            </select>
+            <button class="btn btn-outline btn-sm" data-export="attendance">Download</button>
+          </div>
+          <div class="export-custom-dates" id="customDates-attendance" hidden>
+            <input type="date" class="field-input" id="customStart-attendance">
+            <span>—</span>
+            <input type="date" class="field-input" id="customEnd-attendance">
+          </div>
         </div>
-        <button class="btn btn-outline btn-sm" data-export="attendance">Download</button>
       </div>
+
       <div class="export-option">
-        <div>
+        <div class="export-option-icon export-icon-maintenance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.5 4.9L3 17.4V21h3.6l6.2-6.2a4 4 0 0 0 4.9-5.5l-2.8 2.8-2-2z"/></svg>
+        </div>
+        <div class="export-option-body">
           <strong>Laporan Maintenance Teknisi</strong>
           <p>Riwayat kendala dan tindakan perbaikan seluruh unit.</p>
+          <div class="export-controls">
+            <select class="filter-select export-range-select" id="rangeSelect-maintenance">
+              <option value="all">Semua Data</option>
+              <option value="month">Bulan Ini</option>
+              <option value="semester">Semester Ini</option>
+              <option value="custom">Custom Tanggal</option>
+            </select>
+            <select class="filter-select export-format-select" id="formatSelect-maintenance">
+              <option value="xlsx">.xlsx (Excel)</option>
+              <option value="pdf">.pdf (Cetak)</option>
+            </select>
+            <button class="btn btn-outline btn-sm" data-export="maintenance">Download</button>
+          </div>
+          <div class="export-custom-dates" id="customDates-maintenance" hidden>
+            <input type="date" class="field-input" id="customStart-maintenance">
+            <span>—</span>
+            <input type="date" class="field-input" id="customEnd-maintenance">
+          </div>
         </div>
-        <button class="btn btn-outline btn-sm" data-export="maintenance">Download</button>
       </div>
+
       <div class="export-option">
-        <div>
+        <div class="export-option-icon export-icon-inventory">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8L12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+        </div>
+        <div class="export-option-body">
           <strong>Master Inventaris Aset</strong>
           <p>Daftar lengkap aset PC dan non-PC beserta kondisi.</p>
+          <div class="export-controls">
+            <select class="filter-select export-range-select" id="rangeSelect-inventory">
+              <option value="all">Semua Data</option>
+              <option value="month">Bulan Ini</option>
+              <option value="semester">Semester Ini</option>
+              <option value="custom">Custom Tanggal</option>
+            </select>
+            <select class="filter-select export-format-select" id="formatSelect-inventory">
+              <option value="xlsx">.xlsx (Excel)</option>
+              <option value="pdf">.pdf (Cetak)</option>
+            </select>
+            <button class="btn btn-outline btn-sm" data-export="inventory">Download</button>
+          </div>
+          <div class="export-custom-dates" id="customDates-inventory" hidden>
+            <input type="date" class="field-input" id="customStart-inventory">
+            <span>—</span>
+            <input type="date" class="field-input" id="customEnd-inventory">
+          </div>
         </div>
-
-                <button class="btn btn-outline btn-sm" data-export="inventory">Download</button>
       </div>
     </div>
   </div>
