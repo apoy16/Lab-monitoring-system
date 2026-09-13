@@ -258,6 +258,44 @@ const Api = (() => {
       return fetch(`${BASE_URL}/inventory`).then(r => r.json());
     },
 
+    /** POST /api/inventory — tambah aset baru */
+    async addInventoryItem(item){
+      await delay(150);
+      if (USE_MOCK){
+        DB.inventory.unshift(item);
+        saveDb(DB);
+        return item;
+      }
+      return fetch(`${BASE_URL}/inventory`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(item)
+      }).then(r => r.json());
+    },
+
+    /** PUT /api/inventory/:code — ubah data aset */
+    async updateInventoryItem(code, data){
+      await delay(150);
+      if (USE_MOCK){
+        const item = DB.inventory.find(i => i.code === code);
+        if (item) Object.assign(item, data);
+        saveDb(DB);
+        return item;
+      }
+      return fetch(`${BASE_URL}/inventory/${code}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+      }).then(r => r.json());
+    },
+
+    /** DELETE /api/inventory/:code — hapus aset */
+    async deleteInventoryItem(code){
+      await delay(150);
+      if (USE_MOCK){
+        DB.inventory = DB.inventory.filter(i => i.code !== code);
+        saveDb(DB);
+        return { ok: true };
+      }
+      return fetch(`${BASE_URL}/inventory/${code}`, { method: "DELETE" }).then(r => r.json());
+    },
+
     /** GET /api/pcs/:id/maintenance */
     async getMaintenance(pcId){
       await delay(60);
