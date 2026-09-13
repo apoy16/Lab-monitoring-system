@@ -159,10 +159,10 @@ const Dashboard = (() => {
       }
     };
 
-    // Area fill dengan gradient
+       // Area fill dengan gradient
     const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
-    grad.addColorStop(0, "rgba(37,99,235,0.22)");
-    grad.addColorStop(1, "rgba(37,99,235,0.02)");
+    grad.addColorStop(0, "rgba(79,70,229,0.22)");
+    grad.addColorStop(1, "rgba(79,70,229,0.02)");
     curvePath(points);
     ctx.lineTo(points[points.length - 1].x, padT + plotH);
     ctx.lineTo(points[0].x, padT + plotH);
@@ -172,7 +172,7 @@ const Dashboard = (() => {
 
     // Garis kurva
     curvePath(points);
-    ctx.strokeStyle = "#2563eb";
+    ctx.strokeStyle = "#4f46e5";
     ctx.lineWidth = 2;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
@@ -182,15 +182,14 @@ const Dashboard = (() => {
     const last = points[points.length - 1];
     ctx.beginPath();
     ctx.arc(last.x, last.y, 7, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(37,99,235,0.28)";
+    ctx.strokeStyle = "rgba(79,70,229,0.28)";
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.beginPath();
     ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#2563eb";
+    ctx.fillStyle = "#4f46e5";
     ctx.fill();
   }
-
   function startLiveUpdates(){
     if (liveTimer) clearInterval(liveTimer);
     liveTimer = setInterval(() => {
