@@ -472,8 +472,64 @@
           <strong>Master Inventaris Aset</strong>
           <p>Daftar lengkap aset PC dan non-PC beserta kondisi.</p>
         </div>
-        <button class="btn btn-outline btn-sm" data-export="inventory">Download</button>
+
+                <button class="btn btn-outline btn-sm" data-export="inventory">Download</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: TAMBAH / EDIT ASET INVENTARIS                          -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalInventoryForm">
+  <div class="modal-panel modal-panel-sm">
+    <div class="modal-head">
+      <div>
+        <h3 id="inventoryFormTitle">Tambah Aset Baru</h3>
+        <p>Isi detail aset non-PC di bawah ini</p>
+      </div>
+      <button class="icon-btn" id="inventoryFormClose" aria-label="Tutup">✕</button>
+    </div>
+    <div class="modal-body">
+      <form class="asset-form" id="inventoryForm">
+        <label class="field">
+          <span class="field-label">Kode Aset</span>
+          <input class="field-input" name="code" id="inventoryFormCode" type="text" placeholder="cth: MNT-003" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Nama Aset</span>
+          <input class="field-input" name="name" type="text" placeholder="cth: Monitor LG 19&quot; IPS" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Kategori</span>
+          <input class="field-input" name="category" list="inventoryCategoryOptions" type="text" placeholder="cth: Monitor" required>
+          <datalist id="inventoryCategoryOptions">
+            <option value="Monitor"></option>
+            <option value="Keyboard"></option>
+            <option value="Mouse"></option>
+            <option value="Router"></option>
+            <option value="Wi-Fi Dongle"></option>
+          </datalist>
+        </label>
+        <label class="field">
+          <span class="field-label">Lokasi</span>
+          <select class="field-input" name="location" required>
+            <option value="Lab 1 - GS Lt 2">Lab 1 - GS Lt 2</option>
+            <option value="Lab 2 - GU Lt 3">Lab 2 - GU Lt 3</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Kondisi</span>
+          <select class="field-input" name="condition" required>
+            <option value="Baik">Baik</option>
+            <option value="Rusak Ringan">Rusak Ringan</option>
+            <option value="Perlu diganti">Perlu diganti</option>
+            <option value="Rusak Berat">Rusak Berat</option>
+          </select>
+        </label>
+        <button type="submit" class="btn btn-primary btn-sm" id="inventoryFormSubmit">Simpan Aset</button>
+      </form>
     </div>
   </div>
 </div>
