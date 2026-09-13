@@ -381,31 +381,176 @@ const AttendancePane = (() => {
    ============================================================ */
 const InventoryPane = (() => {
   let allRows = [];
+  let filteredRows = [];
+  let editingCode = null;
 
-  function render(rows){
-    document.getElementById("inventoryTableBody").innerHTML = rows.map(r => `
+  function conditionBadgeClass(condition){
+    const c = (condition || "").toLowerCase();
+    if (c.includes("berat")) return "pill-cond-bad";
+    if (c.includes("baik")) return "pill-cond-good";
+    return "pill-cond-warn";
+  }
+
+  function populateFilterOptions(rows){
+    const catSelect = document.getElementById("filterInvCategory");
+    const locSelect = document.getElementById("filterInvLocation");
+    const condSelect = document.getElementById("filterInvCondition");
+    const cats = [...new Set(rows.map(r => r.category))].sort();
+    const locs = [...new Set(rows.map(r => r.location))].sort();
+    const conds = [...new Set(rows.map(r => r.condition))].sort();
+
+    catSelect.innerHTML = `<option value="">Semua Kategori</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join("");
+    locSelect.innerHTML = `<option value="">Semua Lokasi</option>` + locs.map(l => `<option value="${l}">${l}</option>`).join("");
+    condSelect.innerHTML = `<option value="">Semua Kondisi</option>` + conds.map(c => `<option value="${c}">${c}</option>`).join("");
+  }
+
+  function currentFilters(){
+    return {
+      q: document.getElementById("inventorySearch").value.trim().toLowerCase(),
+      category: document.getElementById("filterInvCategory").value,
+      location: document.getElementById("filterInvLocation").value,
+      condition: document.getElementById("filterInvCondition").value
+    };
+  }
+
+  function applyFilters(){
+    const f = currentFilters();
+    filteredRows = allRows.filter(r => {
+      const matchQ = !f.q || r.name.toLowerCase().includes(f.q) || r.location.toLowerCase().includes(f.q) || r.code.toLowerCase().includes(f.q);
+      const matchCat = !f.category || r.category === f.category;
+      const matchLoc = !f.location || r.location === f.location;
+      const matchCond = !f.condition || r.condition === f.condition;
+      return matchQ && matchCat && matchLoc && matchCond;
+    });
+    render();
+  }
+
+  function render(){
+    const body = document.getElementById("inventoryTableBody");
+    const empty = document.getElementById("inventoryEmpty");
+    const isAdmin = Auth.isAdmin();
+
+    if (!filteredRows.length){
+      body.innerHTML = "";
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+
+    body.innerHTML = filteredRows.map(r => `
       <tr>
         <td>${r.code}</td><td>${r.name}</td><td>${r.category}</td><td>${r.location}</td>
-        <td>${r.condition}</td><td>${r.updated}</td>
-      </tr>`).join("") || `<tr><td colspan="6" style="color:var(--text-faint);">Tidak ada data.</td></tr>`;
+        <td><span class="pill ${conditionBadgeClass(r.condition)}">${r.condition}</span></td>
+        <td>${r.updated}</td>
+        <td class="admin-only">
+          <span class="row-actions">
+            <button class="btn btn-outline btn-sm" data-edit-code="${r.code}" ${isAdmin ? "" : "disabled"}>Edit</button>
+            <button class="btn btn-icon-delete btn-sm" data-delete-code="${r.code}" ${isAdmin ? "" : "disabled"}>Hapus</button>
+          </span>
+        </td>
+      </tr>`).join("");
   }
 
   async function load(){
     allRows = await Api.getInventory();
-    render(allRows);
+    populateFilterOptions(allRows);
+    applyFilters();
   }
 
-  function bindSearch(){
-    document.getElementById("inventorySearch").addEventListener("input", (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      if (!q){ render(allRows); return; }
-      render(allRows.filter(r => r.name.toLowerCase().includes(q) || r.location.toLowerCase().includes(q)));
+  function openForm(item){
+    editingCode = item ? item.code : null;
+    document.getElementById("inventoryFormTitle").textContent = item ? "Edit Aset" : "Tambah Aset Baru";
+    const form = document.getElementById("inventoryForm");
+    form.reset();
+    document.getElementById("inventoryFormCode").disabled = !!item;
+    if (item){
+      form.code.value = item.code;
+      form.name.value = item.name;
+      form.category.value = item.category;
+      form.location.value = item.location;
+      form.condition.value = item.condition;
+    }
+    document.getElementById("modalInventoryForm").classList.add("is-open");
+  }
+
+  function closeForm(){
+    document.getElementById("modalInventoryForm").classList.remove("is-open");
+    document.getElementById("inventoryFormCode").disabled = false;
+    editingCode = null;
+  }
+
+  async function handleSubmit(e){
+    e.preventDefault();
+    if (!Auth.isAdmin()){ Toast.show("Hanya Super Admin yang dapat mengelola aset.", "error"); return; }
+    const form = e.target;
+    const data = {
+      code: form.code.value.trim(),
+      name: form.name.value.trim(),
+      category: form.category.value.trim(),
+      location: form.location.value,
+      condition: form.condition.value,
+      updated: new Date().toISOString().slice(0, 10)
+    };
+    if (editingCode){
+      await Api.updateInventoryItem(editingCode, data);
+      Toast.show("Aset berhasil diperbarui.");
+    } else {
+      if (allRows.some(r => r.code === data.code)){
+        Toast.show("Kode aset sudah dipakai, gunakan kode lain.", "error");
+        return;
+      }
+      await Api.addInventoryItem(data);
+      Toast.show("Aset baru berhasil ditambahkan.");
+    }
+    closeForm();
+    await load();
+  }
+
+  async function handleDelete(code){
+    if (!Auth.isAdmin()){ Toast.show("Hanya Super Admin yang dapat menghapus aset.", "error"); return; }
+    if (!confirm(`Hapus aset ${code}? Tindakan ini tidak bisa dibatalkan.`)) return;
+    await Api.deleteInventoryItem(code);
+    Toast.show("Aset berhasil dihapus.");
+    await load();
+  }
+
+  function bindEvents(){
+    document.getElementById("inventorySearch").addEventListener("input", applyFilters);
+    document.getElementById("filterInvCategory").addEventListener("change", applyFilters);
+    document.getElementById("filterInvLocation").addEventListener("change", applyFilters);
+    document.getElementById("filterInvCondition").addEventListener("change", applyFilters);
+    document.getElementById("btnResetInventoryFilters").addEventListener("click", () => {
+      document.getElementById("inventorySearch").value = "";
+      document.getElementById("filterInvCategory").value = "";
+      document.getElementById("filterInvLocation").value = "";
+      document.getElementById("filterInvCondition").value = "";
+      applyFilters();
+    });
+
+    document.getElementById("btnAddInventory").addEventListener("click", () => {
+      if (!Auth.isAdmin()){ Toast.show("Hanya Super Admin yang dapat menambah aset.", "error"); return; }
+      openForm(null);
+    });
+    document.getElementById("inventoryFormClose").addEventListener("click", closeForm);
+    document.getElementById("modalInventoryForm").addEventListener("click", (e) => {
+      if (e.target.id === "modalInventoryForm") closeForm();
+    });
+    document.getElementById("inventoryForm").addEventListener("submit", handleSubmit);
+
+    document.getElementById("inventoryTableBody").addEventListener("click", (e) => {
+      const editBtn = e.target.closest("[data-edit-code]");
+      if (editBtn){
+        const item = allRows.find(r => r.code === editBtn.dataset.editCode);
+        if (item) openForm(item);
+        return;
+      }
+      const delBtn = e.target.closest("[data-delete-code]");
+      if (delBtn) handleDelete(delBtn.dataset.deleteCode);
     });
   }
 
-  return { load, init: bindSearch };
+  return { load, init: bindEvents };
 })();
-
 /* ============================================================
    APP BOOTSTRAP
    ============================================================ */
