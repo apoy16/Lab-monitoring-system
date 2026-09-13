@@ -99,6 +99,7 @@ const Api = (() => {
             id: attendanceCounter++,
             nim: u.nim, nama: u.nama, kelas: u.kelas, matkul: u.matkul, dosen: u.dosen,
             pc: pcId, sesi: u.sesi, scanIn: addMinutes(sesiStart, Math.floor(Math.random() * 12)),
+            tanggal: new Date().toISOString().slice(0, 10),
             status: status === "active" ? "Aktif" : "Belum Checkout"
           });
         }
@@ -364,27 +365,59 @@ const Api = (() => {
       return fetch(`${BASE_URL}/pcs/shutdown-all?lab=${labId}`, { method: "POST" }).then(r => r.json());
     },
 
-    /** GET /api/export/:type — dalam produksi backend mengembalikan file .xlsx */
-    async exportReport(type){
+        /** Helper: cek apakah sebuah tanggal (YYYY-MM-DD) masuk rentang yang dipilih */
+    _inRange(dateStr, range, customStart, customEnd){
+      if (!dateStr || range === "all") return true;
+      const d = new Date(dateStr);
+      const now = new Date();
+      if (range === "month"){
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      }
+      if (range === "semester"){
+        const semesterStartMonth = now.getMonth() < 6 ? 0 : 6;
+        const semesterStart = new Date(now.getFullYear(), semesterStartMonth, 1);
+        return d >= semesterStart && d <= now;
+      }
+      if (range === "custom"){
+        if (!customStart || !customEnd) return true;
+        return dateStr >= customStart && dateStr <= customEnd;
+      }
+      return true;
+    },
+
+    /** GET /api/export/:type — dalam produksi backend mengembalikan file .xlsx/.pdf */
+    async exportReport(type, options = {}){
       await delay(300);
-      // Dalam implementasi backend Flask sesungguhnya, endpoint ini akan
-      // mengembalikan file biner .xlsx (openpyxl) yang langsung diunduh browser.
-      // Di sisi mock, kita bangun CSV ringan agar tombol tetap fungsional end-to-end.
-      let rows = [];
+      const { range = "all", customStart = "", customEnd = "" } = options;
+      let headers = [];
+      let dataRows = [];
+
       if (type === "attendance"){
-        rows = [["NIM","Nama","Kelas","Mata Kuliah","Dosen","PC","Sesi","Status"],
-          ...DB.attendance.map(a => [a.nim, a.nama, a.kelas, a.matkul, a.dosen, a.pc, a.sesi, a.status])];
+        headers = ["NIM","Nama","Kelas","Mata Kuliah","Dosen","PC","Sesi","Status"];
+        dataRows = DB.attendance
+          .filter(a => this._inRange(a.tanggal, range, customStart, customEnd))
+          .map(a => [a.nim, a.nama, a.kelas, a.matkul, a.dosen, a.pc, a.sesi, a.status]);
       } else if (type === "maintenance"){
-        rows = [["PC","Tanggal","Kendala","Tindakan","Teknisi"]];
+        headers = ["PC","Tanggal","Kendala","Tindakan","Teknisi"];
         Object.entries(DB.maintenance).forEach(([pc, list]) => {
-          list.forEach(m => rows.push([pc, m.date, m.issue, m.action, m.tech]));
+          list.filter(m => this._inRange(m.date, range, customStart, customEnd))
+            .forEach(m => dataRows.push([pc, m.date, m.issue, m.action, m.tech]));
         });
       } else if (type === "inventory"){
-        rows = [["Kode Aset","Nama Aset","Kategori","Lokasi","Kondisi","Update Terakhir"],
-          ...DB.inventory.map(i => [i.code, i.name, i.category, i.location, i.condition, i.updated])];
+        headers = ["Kode Aset","Nama Aset","Kategori","Lokasi","Kondisi","Update Terakhir"];
+        dataRows = DB.inventory
+          .filter(i => this._inRange(i.updated, range, customStart, customEnd))
+          .map(i => [i.code, i.name, i.category, i.location, i.condition, i.updated]);
       }
+
+      const rows = [headers, ...dataRows];
       const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-      return { filename: `laporan_${type}_${Date.now()}.csv`, content: csv };
+      return {
+        filename: `laporan_${type}_${Date.now()}.csv`,
+        content: csv,
+        headers,
+        dataRows
+      };
     }
   };
 })();
