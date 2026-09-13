@@ -266,7 +266,7 @@
         </div>
       </section>
 
-      <!-- ============ INVENTORY PANE ============ -->
+            <!-- ============ INVENTORY PANE ============ -->
       <section class="pane" id="pane-inventory">
         <div class="panel">
           <div class="panel-head panel-head-row">
@@ -275,16 +275,36 @@
               <p>Monitor, keyboard, mouse, router, dan dongle Wi-Fi</p>
             </div>
             <div class="panel-actions">
-              <input type="search" id="inventorySearch" class="search-input" placeholder="Cari nama aset atau lokasi…">
+              <button class="btn btn-primary btn-sm admin-only" id="btnAddInventory">+ Tambah Aset</button>
             </div>
           </div>
-          <div class="panel-body table-wrap">
+
+          <div class="panel-body" style="padding-bottom:0;">
+            <div class="attendance-filters">
+              <input type="search" id="inventorySearch" class="search-input" placeholder="Cari nama aset, kode, atau lokasi…">
+              <select id="filterInvCategory" class="filter-select">
+                <option value="">Semua Kategori</option>
+              </select>
+              <select id="filterInvLocation" class="filter-select">
+                <option value="">Semua Lokasi</option>
+              </select>
+              <select id="filterInvCondition" class="filter-select">
+                <option value="">Semua Kondisi</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" id="btnResetInventoryFilters">Reset Filter</button>
+            </div>
+          </div>
+
+          <div class="panel-body table-wrap" style="padding-top:0;">
             <table class="data-table">
               <thead>
-                <tr><th>Kode Aset</th><th>Nama Aset</th><th>Kategori</th><th>Lokasi</th><th>Kondisi</th><th>Update Terakhir</th></tr>
+                <tr>
+                  <th>Kode Aset</th><th>Nama Aset</th><th>Kategori</th><th>Lokasi</th><th>Kondisi</th><th>Update Terakhir</th><th class="admin-only">Aksi</th>
+                </tr>
               </thead>
               <tbody id="inventoryTableBody"></tbody>
             </table>
+            <p class="table-empty" id="inventoryEmpty" hidden>Tidak ada data yang cocok dengan filter/pencarian.</p>
           </div>
         </div>
       </section>
